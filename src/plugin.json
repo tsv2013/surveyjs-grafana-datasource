@@ -3,6 +3,7 @@
   "type": "datasource",
   "name": "SurveyJS Responses Datasource",
   "id": "surveyjs-grafana-datasource",
+  "backend": true,
   "metrics": true,
   "info": {
     "description": "SurveyJS Responses MongoDB Grafana Datasource Plugin",
