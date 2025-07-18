@@ -27,8 +27,8 @@ export class DataSource extends DataSourceApi<SurveyJSQuery, SurveyJSDataSourceO
       },
     });
     return response.data.map((q: any) => ({
-      label: q.name || q.title || q.text || q.id || q,
-      value: q.id || q,
+      label: q.label || q.name || q.title || q.text || q.value || q.id || q,
+      value: q.value || q.id || q,
     }));
   }
 
@@ -59,22 +59,73 @@ export class DataSource extends DataSourceApi<SurveyJSQuery, SurveyJSDataSourceO
     });
     const data = response.data.map((targetData: any, targetIndex: number) => {
       const query = defaults(options.targets[targetIndex], defaultQuery);
-      return new MutableDataFrame({
-        fields: targetData.columns.map((c: any, i: number) => ({
-          name: c.text,
-          type: ((type) => { switch(type) {
-            case 'string': return FieldType.string;
-            case 'number': return FieldType.number;
-            default: return FieldType.string;
+      if(targetData.type === 'single_choice' || targetData.type === 'multiple_choice') {
+        return new MutableDataFrame({
+          fields: [
+            { name: "Choice", type: FieldType.string, values: Object.keys(targetData.choices) },
+            { name: "Count", type: FieldType.number, values: Object.keys(targetData.choices).map(choice => [targetData.choices[choice]]) }
+          ],
+          refId: query.refId,
+          meta: {
+            preferredVisualisationType: 'graph',
+          },         
+        });      
+      } else if(targetData.type === 'number' || targetData.type === 'date' || targetData.type === 'rating') {
+        if(query.queryText === 'values') {
+          if(targetData.type === 'date') {
+            return new MutableDataFrame({
+              fields: [
+                { name: 'Time', type: FieldType.time, values: targetData.values.map((v: string) => Date.parse(v as string)) },
+                { name: 'Value', type: FieldType.number, values: targetData.values.map((v: string) => 1) },
+              ],
+              refId: query.refId,
+            });      
+          } else {
+            return new MutableDataFrame({
+              fields: [
+                { name: "Values", type: FieldType.number, values: targetData.values },
+              ],
+              refId: query.refId,
+            });      
           }
-          })(c.type),
-          values: targetData.rows.map((r: any) => r[i])
-        })),
+        }
+        return new MutableDataFrame({
+          fields: [
+            { name: "Count", type: FieldType.number, values: [targetData.count] },
+            { name: "Average", type: FieldType.number, values: [targetData.average] },
+            { name: "Min", type: FieldType.number, values: [targetData.min] },
+            { name: "Max", type: FieldType.number, values: [targetData.max] },
+            { name: "Median", type: FieldType.number, values: [targetData.median] },
+            { name: "Mode", type: FieldType.number, values: [targetData.mode] },
+          ],
+          refId: query.refId,
+          meta: {
+            preferredVisualisationType: 'table',
+          },         
+        });      
+      }
+      return new MutableDataFrame({
+        fields: [
+          { name: "Count", type: FieldType.number, values: [targetData.count || 0] },
+        ],
         refId: query.refId,
-        meta: {
-          preferredVisualisationType: 'graph',
-        },         
       });      
+      // return new MutableDataFrame({
+      //   fields: targetData.columns.map((c: any, i: number) => ({
+      //     name: c.text,
+      //     type: ((type) => { switch(type) {
+      //       case 'string': return FieldType.string;
+      //       case 'number': return FieldType.number;
+      //       default: return FieldType.string;
+      //     }
+      //     })(c.type),
+      //     values: targetData.rows.map((r: any) => r[i])
+      //   })),
+      //   refId: query.refId,
+      //   meta: {
+      //     preferredVisualisationType: 'graph',
+      //   },         
+      // });      
     });
 
     // const { range } = options;
