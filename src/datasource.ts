@@ -75,8 +75,9 @@ export class DataSource extends DataSourceApi<SurveyJSQuery, SurveyJSDataSourceO
           if(targetData.type === 'date') {
             return new MutableDataFrame({
               fields: [
-                { name: 'Time', type: FieldType.time, values: targetData.values.map((v: string) => Date.parse(v as string)) },
-                { name: 'Value', type: FieldType.number, values: targetData.values.map((v: string) => 1) },
+                // { name: 'Time', type: FieldType.time, values: targetData.values.map((v: string) => Date.parse(v as string)) },
+                // { name: 'Count', type: FieldType.number, values: targetData.values.map((v: string) => 1) },
+                { name: 'Values', type: FieldType.number, values: targetData.values.map((v: string) => Date.parse(v as string)) },
               ],
               refId: query.refId,
             });      
@@ -101,6 +102,17 @@ export class DataSource extends DataSourceApi<SurveyJSQuery, SurveyJSDataSourceO
           refId: query.refId,
           meta: {
             preferredVisualisationType: 'table',
+          },         
+        });      
+      } else if(targetData.type === 'ranking') {
+        return new MutableDataFrame({
+          fields: [
+            { name: "Choice", type: FieldType.string, values: Object.keys(targetData.averageRankings) },
+            { name: "Average Rank", type: FieldType.number, values: Object.keys(targetData.averageRankings).map(choice => targetData.averageRankings[choice]) }
+          ],
+          refId: query.refId,
+          meta: {
+            preferredVisualisationType: 'graph',
           },         
         });      
       }
