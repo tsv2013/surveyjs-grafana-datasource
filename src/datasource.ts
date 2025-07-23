@@ -115,6 +115,20 @@ export class DataSource extends DataSourceApi<SurveyJSQuery, SurveyJSDataSourceO
             preferredVisualisationType: 'graph',
           },         
         });      
+      } else if(targetData.type === 'text') {
+        return new MutableDataFrame({
+          fields: [
+            { name: "Count", type: FieldType.number, values: [targetData.count ? targetData.count : 0] },
+            { name: "Average Length", type: FieldType.number, values: [targetData.averageLength ? targetData.averageLength : 0] },
+            { name: "Median Length", type: FieldType.number, values: [targetData.medianLength ? targetData.medianLength : 0] },
+            { name: "Average Polarity", type: FieldType.number, values: [targetData.sentimentAnalysis?.average ? targetData.sentimentAnalysis?.average : 0] },
+            { name: "Positive", type: FieldType.number, values: [targetData.sentimentAnalysis?.positive ? targetData.sentimentAnalysis?.positive : 0] },
+            { name: "Negative", type: FieldType.number, values: [targetData.sentimentAnalysis?.negative ? targetData.sentimentAnalysis?.negative : 0] },
+            { name: "Neutral", type: FieldType.number, values: [targetData.sentimentAnalysis?.neutral ? targetData.sentimentAnalysis?.neutral : 0] },
+            { name: "Common Words", type: FieldType.other, values: targetData.commonWords },
+          ],
+          refId: query.refId,
+        });      
       }
       return new MutableDataFrame({
         fields: [
